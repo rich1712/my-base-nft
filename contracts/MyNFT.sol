@@ -24,6 +24,11 @@ contract MyNFT is ERC721, Ownable, Pausable {
     // Whitelist mapping
     mapping(address => bool) public whitelist;
 
+    // Events
+    event NFTMinted(address indexed to, uint256 tokenId);
+    event Withdrawn(address indexed owner, uint256 amount);
+    event WhitelistUpdated(address indexed account, bool status);
+
     // Sets the NFT name, symbol and owner on deployment
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
         tokenCounter = 0;
@@ -32,11 +37,13 @@ contract MyNFT is ERC721, Ownable, Pausable {
     // Allows owner to add address to whitelist
     function addToWhitelist(address _address) public onlyOwner {
         whitelist[_address] = true;
+        emit WhitelistUpdated(_address, true);
     }
 
     // Allows owner to remove address from whitelist
     function removeFromWhitelist(address _address) public onlyOwner {
         whitelist[_address] = false;
+        emit WhitelistUpdated(_address, false);
     }
 
     // Allows owner to pause minting
@@ -56,4 +63,26 @@ contract MyNFT is ERC721, Ownable, Pausable {
 
     // Returns the metadata URI for a given token
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        return string(abi.encodePacked(baseURI,
+        return string(abi.encodePacked(baseURI, Strings.toString(tokenId), ".json"));
+    }
+
+    // Mints a new NFT to the specified address
+    // Whitelisted addresses mint for free
+    function mint(address to) public payable whenNotPaused {
+        require(tokenCounter < maxSupply, "Max supply reached");
+        if (!whitelist[msg.sender]) {
+            require(msg.value >= mintPrice, "Not enough ETH sent");
+        }
+        _safeMint(to, tokenCounter);
+        emit NFTMinted(to, tokenCounter);
+        tokenCounter++;
+    }
+
+    // Allows owner to withdraw all ETH from contract
+    function withdraw() public onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No ETH to withdraw");
+        payable(owner()).transfer(balance);
+        emit Withdrawn(owner(), balance);
+    }
+}
