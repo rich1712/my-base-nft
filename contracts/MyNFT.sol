@@ -21,9 +21,22 @@ contract MyNFT is ERC721, Ownable, Pausable {
     // Base URI for NFT metadata
     string public baseURI;
 
+    // Whitelist mapping
+    mapping(address => bool) public whitelist;
+
     // Sets the NFT name, symbol and owner on deployment
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
         tokenCounter = 0;
+    }
+
+    // Allows owner to add address to whitelist
+    function addToWhitelist(address _address) public onlyOwner {
+        whitelist[_address] = true;
+    }
+
+    // Allows owner to remove address from whitelist
+    function removeFromWhitelist(address _address) public onlyOwner {
+        whitelist[_address] = false;
     }
 
     // Allows owner to pause minting
@@ -43,22 +56,4 @@ contract MyNFT is ERC721, Ownable, Pausable {
 
     // Returns the metadata URI for a given token
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        return string(abi.encodePacked(baseURI, Strings.toString(tokenId), ".json"));
-    }
-
-    // Mints a new NFT to the specified address
-    // Anyone can mint by paying the mint price
-    function mint(address to) public payable whenNotPaused {
-        require(tokenCounter < maxSupply, "Max supply reached");
-        require(msg.value >= mintPrice, "Not enough ETH sent");
-        _safeMint(to, tokenCounter);
-        tokenCounter++;
-    }
-
-    // Allows owner to withdraw all ETH from contract
-    function withdraw() public onlyOwner {
-        uint256 balance = address(this).balance;
-        require(balance > 0, "No ETH to withdraw");
-        payable(owner()).transfer(balance);
-    }
-}
+        return string(abi.encodePacked(baseURI,
