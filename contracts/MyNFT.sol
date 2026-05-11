@@ -10,4 +10,9 @@ contract MyNFT is ERC721, Ownable {
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
         tokenCounter = 0;
     }
+
+    function mint(address to) public onlyOwner {
+        _safeMint(to, tokenCounter);
+        tokenCounter++;
+    }
 }
