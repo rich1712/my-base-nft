@@ -17,9 +17,22 @@ contract MyNFT is ERC721, Ownable {
     // Price to mint one NFT
     uint256 public mintPrice = 0.01 ether;
 
+    // Base URI for NFT metadata
+    string public baseURI;
+
     // Sets the NFT name, symbol and owner on deployment
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
         tokenCounter = 0;
+    }
+
+    // Allows owner to set the base metadata URI
+    function setBaseURI(string memory _baseURI) public onlyOwner {
+        baseURI = _baseURI;
+    }
+
+    // Returns the metadata URI for a given token
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        return string(abi.encodePacked(baseURI, Strings.toString(tokenId), ".json"));
     }
 
     // Mints a new NFT to the specified address
