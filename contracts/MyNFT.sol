@@ -14,15 +14,19 @@ contract MyNFT is ERC721, Ownable {
     // Maximum number of NFTs that can ever be minted
     uint256 public maxSupply = 100;
 
+    // Price to mint one NFT
+    uint256 public mintPrice = 0.01 ether;
+
     // Sets the NFT name, symbol and owner on deployment
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
         tokenCounter = 0;
     }
 
     // Mints a new NFT to the specified address
-    // Only the contract owner can call this
-    function mint(address to) public onlyOwner {
+    // Anyone can mint by paying the mint price
+    function mint(address to) public payable {
         require(tokenCounter < maxSupply, "Max supply reached");
+        require(msg.value >= mintPrice, "Not enough ETH sent");
         _safeMint(to, tokenCounter);
         tokenCounter++;
     }
