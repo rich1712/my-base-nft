@@ -16,14 +16,23 @@ contract MyNFT is ERC721, Ownable, Pausable {
     // Maximum number of NFTs that can ever be minted
     uint256 public maxSupply = 100;
 
-    // Price to mint one NFT
+    // Price to mint one NFT during public sale
     uint256 public mintPrice = 0.01 ether;
+
+    // Price to mint one NFT during presale
+    uint256 public presalePrice = 0.005 ether;
 
     // Max NFTs per wallet
     uint256 public maxPerWallet = 3;
 
     // Max NFTs per whitelisted wallet
     uint256 public maxPerWhitelist = 5;
+
+    // Presale active flag
+    bool public presaleActive = false;
+
+    // Public sale active flag
+    bool public publicSaleActive = false;
 
     // Base URI for NFT metadata
     string public baseURI;
@@ -41,6 +50,8 @@ contract MyNFT is ERC721, Ownable, Pausable {
     event MintPriceUpdated(uint256 newPrice);
     event MaxPerWalletUpdated(uint256 newMax);
     event MaxPerWhitelistUpdated(uint256 newMax);
+    event PresaleStatusUpdated(bool status);
+    event PublicSaleStatusUpdated(bool status);
 
     // Sets the NFT name, symbol and owner on deployment
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
@@ -57,6 +68,18 @@ contract MyNFT is ERC721, Ownable, Pausable {
     function removeFromWhitelist(address _address) public onlyOwner {
         whitelist[_address] = false;
         emit WhitelistUpdated(_address, false);
+    }
+
+    // Allows owner to toggle presale on or off
+    function setPresaleActive(bool _status) public onlyOwner {
+        presaleActive = _status;
+        emit PresaleStatusUpdated(_status);
+    }
+
+    // Allows owner to toggle public sale on or off
+    function setPublicSaleActive(bool _status) public onlyOwner {
+        publicSaleActive = _status;
+        emit PublicSaleStatusUpdated(_status);
     }
 
     // Allows owner to pause minting
@@ -135,16 +158,25 @@ contract MyNFT is ERC721, Ownable, Pausable {
         return mintedPerWallet[_address];
     }
 
-    // Mints a new NFT to the specified address
-    // Whitelisted addresses mint for free but have their own limit
-    function mint(address to) public payable whenNotPaused {
+    // Presale mint for whitelisted addresses at discounted price
+    function presaleMint(address to) public payable whenNotPaused {
+        require(presaleActive, "Presale is not active");
+        require(whitelist[msg.sender], "Not whitelisted");
         require(tokenCounter < maxSupply, "Max supply reached");
-        if (whitelist[msg.sender]) {
-            require(mintedPerWallet[msg.sender] < maxPerWhitelist, "Whitelist mint limit reached");
-        } else {
-            require(mintedPerWallet[msg.sender] < maxPerWallet, "Max per wallet reached");
-            require(msg.value >= mintPrice, "Not enough ETH sent");
-        }
+        require(mintedPerWallet[msg.sender] < maxPerWhitelist, "Whitelist mint limit reached");
+        require(msg.value >= presalePrice, "Not enough ETH sent");
+        _safeMint(to, tokenCounter);
+        emit NFTMinted(to, tokenCounter);
+        mintedPerWallet[msg.sender]++;
+        tokenCounter++;
+    }
+
+    // Public mint for everyone at full price
+    function mint(address to) public payable whenNotPaused {
+        require(publicSaleActive, "Public sale is not active");
+        require(tokenCounter < maxSupply, "Max supply reached");
+        require(mintedPerWallet[msg.sender] < maxPerWallet, "Max per wallet reached");
+        require(msg.value >= mintPrice, "Not enough ETH sent");
         _safeMint(to, tokenCounter);
         emit NFTMinted(to, tokenCounter);
         mintedPerWallet[msg.sender]++;
