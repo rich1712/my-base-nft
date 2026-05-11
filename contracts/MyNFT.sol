@@ -95,6 +95,16 @@ contract MyNFT is ERC721, Ownable, Pausable {
         tokenCounter++;
     }
 
+    // Returns the total number of NFTs currently in circulation
+    function totalSupply() public view returns (uint256) {
+        return tokenCounter;
+    }
+
+    // Returns the remaining number of NFTs available to mint
+    function remainingSupply() public view returns (uint256) {
+        return maxSupply - tokenCounter;
+    }
+
     // Allows token owner to burn their NFT
     function burn(uint256 tokenId) public {
         require(ownerOf(tokenId) == msg.sender, "Not the token owner");
