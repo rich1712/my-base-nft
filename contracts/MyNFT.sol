@@ -7,9 +7,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 // MyNFT is a simple NFT collection deployed on Base
 contract MyNFT is ERC721, Ownable {
-    
+
     // Tracks the total number of NFTs minted
     uint256 public tokenCounter;
+
+    // Maximum number of NFTs that can ever be minted
+    uint256 public maxSupply = 100;
 
     // Sets the NFT name, symbol and owner on deployment
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
@@ -19,6 +22,7 @@ contract MyNFT is ERC721, Ownable {
     // Mints a new NFT to the specified address
     // Only the contract owner can call this
     function mint(address to) public onlyOwner {
+        require(tokenCounter < maxSupply, "Max supply reached");
         _safeMint(to, tokenCounter);
         tokenCounter++;
     }
