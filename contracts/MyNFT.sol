@@ -63,6 +63,14 @@ contract MyNFT is ERC721, Ownable, Pausable {
         _unpause();
     }
 
+    // Allows owner to mint for free
+    function ownerMint(address to) public onlyOwner {
+        require(tokenCounter < maxSupply, "Max supply reached");
+        _safeMint(to, tokenCounter);
+        emit NFTMinted(to, tokenCounter);
+        tokenCounter++;
+    }
+
     // Allows owner to set the base metadata URI
     function setBaseURI(string memory _baseURI) public onlyOwner {
         baseURI = _baseURI;
