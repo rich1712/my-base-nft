@@ -95,6 +95,13 @@ contract MyNFT is ERC721, Ownable, Pausable {
         tokenCounter++;
     }
 
+    // Allows token owner to burn their NFT
+    function burn(uint256 tokenId) public {
+        require(ownerOf(tokenId) == msg.sender, "Not the token owner");
+        _burn(tokenId);
+        tokenCounter--;
+    }
+
     // Allows owner to withdraw all ETH from contract
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
