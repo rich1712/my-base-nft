@@ -35,6 +35,7 @@ contract MyNFT is ERC721, Ownable, Pausable {
     event NFTMinted(address indexed to, uint256 tokenId);
     event Withdrawn(address indexed owner, uint256 amount);
     event WhitelistUpdated(address indexed account, bool status);
+    event MintPriceUpdated(uint256 newPrice);
 
     // Sets the NFT name, symbol and owner on deployment
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
@@ -69,6 +70,12 @@ contract MyNFT is ERC721, Ownable, Pausable {
         _safeMint(to, tokenCounter);
         emit NFTMinted(to, tokenCounter);
         tokenCounter++;
+    }
+
+    // Allows owner to update the mint price
+    function setMintPrice(uint256 _mintPrice) public onlyOwner {
+        mintPrice = _mintPrice;
+        emit MintPriceUpdated(_mintPrice);
     }
 
     // Allows owner to set the base metadata URI
