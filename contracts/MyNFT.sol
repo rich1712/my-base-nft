@@ -37,7 +37,7 @@ contract MyNFT is ERC721, Ownable, Pausable {
     event WhitelistUpdated(address indexed account, bool status);
     event MintPriceUpdated(uint256 newPrice);
     event MaxPerWalletUpdated(uint256 newMax);
-    
+
     // Sets the NFT name, symbol and owner on deployment
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
         tokenCounter = 0;
@@ -105,6 +105,26 @@ contract MyNFT is ERC721, Ownable, Pausable {
         return string(abi.encodePacked(baseURI, Strings.toString(tokenId), ".json"));
     }
 
+    // Returns the total number of NFTs currently in circulation
+    function totalSupply() public view returns (uint256) {
+        return tokenCounter;
+    }
+
+    // Returns the remaining number of NFTs available to mint
+    function remainingSupply() public view returns (uint256) {
+        return maxSupply - tokenCounter;
+    }
+
+    // Returns the contract ETH balance
+    function contractBalance() public view returns (uint256) {
+        return address(this).balance;
+    }
+
+    // Returns how many NFTs a specific wallet has minted
+    function walletMintCount(address _address) public view returns (uint256) {
+        return mintedPerWallet[_address];
+    }
+
     // Mints a new NFT to the specified address
     // Whitelisted addresses mint for free
     function mint(address to) public payable whenNotPaused {
@@ -117,16 +137,6 @@ contract MyNFT is ERC721, Ownable, Pausable {
         emit NFTMinted(to, tokenCounter);
         mintedPerWallet[msg.sender]++;
         tokenCounter++;
-    }
-
-    // Returns the total number of NFTs currently in circulation
-    function totalSupply() public view returns (uint256) {
-        return tokenCounter;
-    }
-
-    // Returns the remaining number of NFTs available to mint
-    function remainingSupply() public view returns (uint256) {
-        return maxSupply - tokenCounter;
     }
 
     // Allows token owner to burn their NFT
