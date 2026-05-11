@@ -22,6 +22,9 @@ contract MyNFT is ERC721, Ownable, Pausable {
     // Max NFTs per wallet
     uint256 public maxPerWallet = 3;
 
+    // Max NFTs per whitelisted wallet
+    uint256 public maxPerWhitelist = 5;
+
     // Base URI for NFT metadata
     string public baseURI;
 
@@ -37,6 +40,7 @@ contract MyNFT is ERC721, Ownable, Pausable {
     event WhitelistUpdated(address indexed account, bool status);
     event MintPriceUpdated(uint256 newPrice);
     event MaxPerWalletUpdated(uint256 newMax);
+    event MaxPerWhitelistUpdated(uint256 newMax);
 
     // Sets the NFT name, symbol and owner on deployment
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
@@ -95,6 +99,12 @@ contract MyNFT is ERC721, Ownable, Pausable {
         emit MaxPerWalletUpdated(_maxPerWallet);
     }
 
+    // Allows owner to update the max mints per whitelisted wallet
+    function setMaxPerWhitelist(uint256 _maxPerWhitelist) public onlyOwner {
+        maxPerWhitelist = _maxPerWhitelist;
+        emit MaxPerWhitelistUpdated(_maxPerWhitelist);
+    }
+
     // Allows owner to set the base metadata URI
     function setBaseURI(string memory _baseURI) public onlyOwner {
         baseURI = _baseURI;
@@ -126,11 +136,13 @@ contract MyNFT is ERC721, Ownable, Pausable {
     }
 
     // Mints a new NFT to the specified address
-    // Whitelisted addresses mint for free
+    // Whitelisted addresses mint for free but have their own limit
     function mint(address to) public payable whenNotPaused {
         require(tokenCounter < maxSupply, "Max supply reached");
-        require(mintedPerWallet[msg.sender] < maxPerWallet, "Max per wallet reached");
-        if (!whitelist[msg.sender]) {
+        if (whitelist[msg.sender]) {
+            require(mintedPerWallet[msg.sender] < maxPerWhitelist, "Whitelist mint limit reached");
+        } else {
+            require(mintedPerWallet[msg.sender] < maxPerWallet, "Max per wallet reached");
             require(msg.value >= mintPrice, "Not enough ETH sent");
         }
         _safeMint(to, tokenCounter);
