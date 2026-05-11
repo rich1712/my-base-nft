@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// Importing OpenZeppelin ERC721 and Ownable contracts
+// Importing OpenZeppelin ERC721, Ownable and Pausable contracts
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 // MyNFT is a simple NFT collection deployed on Base
-contract MyNFT is ERC721, Ownable {
+contract MyNFT is ERC721, Ownable, Pausable {
 
     // Tracks the total number of NFTs minted
     uint256 public tokenCounter;
@@ -25,6 +26,16 @@ contract MyNFT is ERC721, Ownable {
         tokenCounter = 0;
     }
 
+    // Allows owner to pause minting
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    // Allows owner to unpause minting
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
     // Allows owner to set the base metadata URI
     function setBaseURI(string memory _baseURI) public onlyOwner {
         baseURI = _baseURI;
@@ -37,7 +48,7 @@ contract MyNFT is ERC721, Ownable {
 
     // Mints a new NFT to the specified address
     // Anyone can mint by paying the mint price
-    function mint(address to) public payable {
+    function mint(address to) public payable whenNotPaused {
         require(tokenCounter < maxSupply, "Max supply reached");
         require(msg.value >= mintPrice, "Not enough ETH sent");
         _safeMint(to, tokenCounter);
