@@ -30,4 +30,11 @@ contract MyNFT is ERC721, Ownable {
         _safeMint(to, tokenCounter);
         tokenCounter++;
     }
+
+    // Allows owner to withdraw all ETH from contract
+    function withdraw() public onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No ETH to withdraw");
+        payable(owner()).transfer(balance);
+    }
 }
