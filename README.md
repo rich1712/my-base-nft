@@ -1,4 +1,4 @@
-# My Base NFT 🎨
+# My Base NFT
 
 A simple ERC721 NFT collection deployed on Base mainnet.
 
