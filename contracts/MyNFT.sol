@@ -73,6 +73,16 @@ contract MyNFT is ERC721, Ownable, Pausable {
         tokenCounter++;
     }
 
+    // Allows owner to gift NFTs to multiple addresses at once
+    function giftNFT(address[] calldata recipients) public onlyOwner {
+        require(tokenCounter + recipients.length <= maxSupply, "Would exceed max supply");
+        for (uint256 i = 0; i < recipients.length; i++) {
+            _safeMint(recipients[i], tokenCounter);
+            emit NFTMinted(recipients[i], tokenCounter);
+            tokenCounter++;
+        }
+    }
+
     // Allows owner to update the mint price
     function setMintPrice(uint256 _mintPrice) public onlyOwner {
         mintPrice = _mintPrice;
