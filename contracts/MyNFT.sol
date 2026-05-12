@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// Importing OpenZeppelin ERC721, Ownable and Pausable contracts
+// Importing OpenZeppelin ERC721, Ownable, Pausable and ERC2981 contracts
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
 // MyNFT is a simple NFT collection deployed on Base
-contract MyNFT is ERC721, Ownable, Pausable {
+contract MyNFT is ERC721, ERC2981, Ownable, Pausable {
 
     // Tracks the total number of NFTs minted
     uint256 public tokenCounter;
@@ -52,10 +53,18 @@ contract MyNFT is ERC721, Ownable, Pausable {
     event MaxPerWhitelistUpdated(uint256 newMax);
     event PresaleStatusUpdated(bool status);
     event PublicSaleStatusUpdated(bool status);
+    event RoyaltyUpdated(address receiver, uint96 feeNumerator);
 
-    // Sets the NFT name, symbol and owner on deployment
+    // Sets the NFT name, symbol, owner and default royalty on deployment
     constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {
         tokenCounter = 0;
+        _setDefaultRoyalty(msg.sender, 500); // 5% royalty
+    }
+
+    // Allows owner to update royalty info
+    function setRoyalty(address receiver, uint96 feeNumerator) public onlyOwner {
+        _setDefaultRoyalty(receiver, feeNumerator);
+        emit RoyaltyUpdated(receiver, feeNumerator);
     }
 
     // Allows owner to add address to whitelist
@@ -196,5 +205,10 @@ contract MyNFT is ERC721, Ownable, Pausable {
         require(balance > 0, "No ETH to withdraw");
         payable(owner()).transfer(balance);
         emit Withdrawn(owner(), balance);
+    }
+
+    // Required override for ERC2981 and ERC721 compatibility
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC2981) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }
